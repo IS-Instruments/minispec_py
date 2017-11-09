@@ -61,7 +61,9 @@ Once you've found your spectrometer, you can connect to it:
         mspec = minispec()
         mspec.open(address[0])
 
-Here we `pop` the first spectrometer on the list.
+Here we `pop` the first spectrometer on the list. The spectrometer, by default, broadcasts on port `8000`. Unless you've changed this, you can just pass the spectrometer address to the `open` function.
+
+Note that while the connection to the spectrometer is encrypted, this is to prevent casual snooping of data rather than stringent security. The SSL certificate is regenerated each time the spectrometer is rebooted and some SSL libraries will complain. You can safely ignore these errors without any loss of functionality, but just be aware that the data you receive shouldn't be considered 'secure' in the sense of online banking! In any case, the spectromter broadcasts its presence publicly so if you really need a secure connection, connect it directly to your computer or use the hotspot functionality.
 
 ## Get the calibration coefficients
 
