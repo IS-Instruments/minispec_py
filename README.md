@@ -41,11 +41,13 @@ An example python script is provided which will locate a spectrometer on the net
 
 ## Locating devices
 
-The `findDevices` function can be used to locate any connected spectrometers on the local network. Connected minispecs broadcast via UDP on port `12345`. This returns a Python set containing all the spectrometers which were found before timeout (3 seconds by default). The minispec broadcast message frequency is 1Hz, so this should catch most connected devices.
+The `findDevices` function can be used to locate any connected spectrometers on the local network. This returns a Python set containing all the spectrometers which were found before timeout (3 seconds by default). 
 
 The set contains tuples of the form: `((hostname, port), interface, serial)`.
 
-The serial number is a 64-bit integer unique to each PCB in the spectrometer.
+The serial number is a 64-bit integer unique to each spectrometer. The minispec broadcast message frequency is 1Hz, so this should catch most connected devices. Connected minispecs broadcast via UDP on port `12345`, which is set as the default.
+
+`findDevices` takes three optional parameters, `find_first`: whether to only return one spectrometer and timeouts for the socket `sock_timeout` and the device search `search_timeout`.
 
 ## Connecting
 
