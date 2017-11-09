@@ -67,7 +67,7 @@ Note that while the connection to the spectrometer is encrypted, this is to prev
 
 ## Get the calibration coefficients
 
-To do anything useful with our spectra, we need to know what wavelengths we're measuring. This is unique to each spectrometer which is calibrated on leaving our workshop.
+To do anything useful with our spectra, we need to know what wavelengths each pixel represents. This conversion is unique to each spectrometer which is calibrated prior to leaving our workshop. We perform the calibration by taking a spectrum of a Mercury-Argon emission lamp which provides known spectral lines. We then perform a polynomial fit to the observed (pixel) line locations and their known wavelengths.
 
     cal = mspec.getCalibration()
     print(cal)
@@ -76,7 +76,7 @@ This should output something like:
 
     [  1.21419996e-12  -8.04026968e-06   1.61927998e-01   3.99615997e+02]
 
-This represents a 3rd order polynomial to convert pixel number to nanometers. The last coefficient is the starting wavelength, and the calibration (for pixel number `i`) is performed as:
+This represents a 3rd order polynomial to convert pixel number to nanometers. The last coefficient is the starting wavelength (e.g. 399 nm here), and the calibration for pixel number `i` is performed as:
 
     wavelength[i] = cal[4] + cal[3]*i**1 + cal[2]*i**2 + cal[1]*i**3
 
@@ -84,7 +84,7 @@ We provide this as a function for you:
 
     wavelengths = mspec.getWavelengths()
 
-Which returns a numpy array containing the wavelength conversion for each pixel on the detector.
+which returns a numpy array containing the wavelength conversion for each pixel on the detector.
 
 If you need to update the calibration coefficients, you can do this by using the `setCalibration()` function which is used as follows:
 
