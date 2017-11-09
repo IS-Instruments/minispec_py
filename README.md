@@ -51,10 +51,13 @@ The serial number is a 64-bit integer unique to each PCB in the spectrometer.
 
 Once you've found your spectrometer, you can connect to it:
 
-    address, iface, serial = spectrometers.pop()
+    spectrometers = findDevices(find_first=True)
     
-    mspec = minispec()
-    mspec.open(address[0])
+    if len(spectrometers) > 0:
+        address, iface, serial = spectrometers.pop()
+
+        mspec = minispec()
+        mspec.open(address[0])
 
 Here we `pop` the first spectrometer on the list.
 
