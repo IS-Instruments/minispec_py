@@ -1,6 +1,8 @@
 # minispec_py
 This repository provides an example python interface to the IS Instruments MSP1000 miniature spectrometer - we call it the minispec for short. There are minimal dependencies - spectra are returned as Numpy arrays and the connection to the spectrometer is made via SSL. This code was written to target Python 3, but should work on Python 2.7 as well.
 
+A standalone C++ interface will be released in the near future.
+
 # About the spectrometer
 The MSP1000 is a scientific-grade VIS/NIR spectrometer with a typical spectral range of 400-850nm and a (fibre-dependent) resolution of less than 1 nm. The spectrometer connects via your local network by one of four methods:
 
@@ -15,7 +17,7 @@ Because the spectrometer is effectively operating as a web server, it can be acc
 
 The interface to the spectrometer is via a web socket. This means that you can connect using pretty much any language you like.
 
-# About the library
+# About this library
 
 We designed our minispec to be easy to use and we provide a free GUI application for live spectral plotting and analysis. However, we also understand that you'd probably like to integrate the spectrometer in your own system.
 
@@ -26,10 +28,12 @@ This python library is designed as a basic, but functional, interface to the spe
 - Query if the spectromter is in 'read only' mode
 - Get and set exposure value (ms)
 - Acquire a spectrum with CCD bias removed
-- Acquire a raw spectrum (the raw readout from the detector)
+- Acquire a raw spectrum (the raw readout from the ADC)
 - Store and automatically subtract a dark frame
 - Get and set calibration coefficients
 - Get the wavelengths corresponding to pixel numbers
+
+The ability to update the WiFi settings will be added soon.
 
 An example python script is provided which will locate a spectrometer on the network, connect to it, set the exposure time, capture a spectrum and plot it.
 
