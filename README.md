@@ -87,7 +87,7 @@ This should output something like:
 
     [  1.21419996e-12  -8.04026968e-06   1.61927998e-01   3.99615997e+02]
 
-This represents a 3rd order polynomial to convert pixel number to nanometers. The last coefficient is the starting wavelength, and the calibration (for pixel number `i`) is performed as:
+This represents a 3rd order polynomial to convert pixel number to nanometers. The last coefficient is the starting wavelength (e.g. 399 nm here), and the calibration for pixel number `i` is performed as:
 
     wavelength[i] = cal[4] + cal[3]*i**1 + cal[2]*i**2 + cal[1]*i**3
 
