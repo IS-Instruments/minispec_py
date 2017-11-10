@@ -189,10 +189,12 @@ num_averages = 10
 spectrum = np.zeros(3648)
 
 for i in range(num_averages):
-    spectrum += mspec.getSpectrum()
+    spectrum += mspec.spectrum()
 
 spectrum_average = spectrum.mean()
 ```
+
+Since the returned spectra are numpy arrays, you have access to the various powerful tools that numpy offers such as built-in operations like `.mean()`.
 
 For further processing we direct you to the excellent and mature Scipy library which contains a huge number of signal processing functions, for example [smoothing](http://scipy-cookbook.readthedocs.io/items/SignalSmooth.html).
 
