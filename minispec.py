@@ -68,14 +68,11 @@ def find_devices(find_first=False, sock_timeout=3, search_timeout=3):
     return spectrometers
 
 class Minispec(object):
-
-    """
-    Interface class for the IS-Instruments MSP1000 miniature spectrometer
+    """Interface class for the IS-Instruments MSP1000 miniature spectrometer
     """
 
     def __init__(self, hostname=None, port=8000):
-        """
-        Create a new spectrometer object
+        """Create a new spectrometer object
 
         Args:
             hostname: IP address or hostname of spectrometer
@@ -91,8 +88,7 @@ class Minispec(object):
             self.open(hostname, port)
 
     def open(self, hostname, port=8000):
-        """
-        Opens a connection to a spectrometer
+        """Opens a connection to a spectrometer
 
         Args:
             hostname: IP address or hostname of spectrometer
@@ -115,8 +111,7 @@ class Minispec(object):
             sock.close()
 
     def release(self):
-        """
-        Close the connection to the spectrometer
+        """Close the connection to the spectrometer
 
         Returns:
             None
@@ -125,8 +120,7 @@ class Minispec(object):
 
     @property
     def exposure(self):
-        """
-        Get the exposure time of the spectromter
+        """Get the exposure time of the spectromter
 
         Returns:
             The exposure time reported by the spectrometer.
@@ -137,8 +131,7 @@ class Minispec(object):
 
     @exposure.setter
     def exposure(self, exposure=2):
-        """
-        Set the exposure time of the spectromter
+        """Set the exposure time of the spectromter
 
         Args:
             exposure (int): Desired exposure time in ms
@@ -151,8 +144,7 @@ class Minispec(object):
         return
 
     def raw_spectrum(self):
-        """
-        Acquire a raw spectrum
+        """Acquire a raw spectrum
 
         Performs an exposure and retrieves the raw spectrum. Most of the time
         you should just use minispec.spectrum. This data also includes
@@ -171,8 +163,7 @@ class Minispec(object):
         return np.frombuffer(bytes(buffer[9:]), dtype='uint16', count=3694)
 
     def spectrum(self):
-        """
-        Acquire a spectrum
+        """Acquire a spectrum
 
         Performs an exposure and retrieves the spectrum. The voltage offset from the
         CCD is automatically subtracted. If a dark spectrum has been set, this will
@@ -195,8 +186,7 @@ class Minispec(object):
 
     @property
     def dark(self):
-        """
-        Get the dark spectrum
+        """Get the dark spectrum
 
         Returns:
             None
@@ -205,8 +195,7 @@ class Minispec(object):
 
     @dark.setter
     def dark(self, spectrum):
-        """
-        Set the dark spectrum.
+        """Set the dark spectrum.
 
         This should be a 1x3648 float32 numpy array. It will be automatically subtracted
         from new spectra, to disable, call minispec.reset_dark.
@@ -221,8 +210,7 @@ class Minispec(object):
             self._dark = spectrum
 
     def reset_dark(self):
-        """
-        Reset the dark spectrum (to nothing)
+        """Reset the dark spectrum (to nothing)
 
         Returns:
             None
@@ -230,8 +218,7 @@ class Minispec(object):
         self._dark = None
 
     def update_calibration(self):
-        """
-        Update wavelength calibration coeffients.
+        """Update wavelength calibration coeffients.
 
         Get the new calibration coefficients from the spectrometer.
 
@@ -246,8 +233,7 @@ class Minispec(object):
 
     @property
     def calibration(self):
-        """
-        Get wavelength calibration coeffients.
+        """Get wavelength calibration coeffients.
 
         The spectrum is corrected using a 3rd degree polynomial.
 
@@ -269,8 +255,7 @@ class Minispec(object):
 
     @calibration.setter
     def calibration(self, coefficients):
-        """
-        Set wavelength calibration coeffients.
+        """Set wavelength calibration coeffients.
 
         The spectrum is corrected using a 3rd degree polynomial.
 
@@ -302,8 +287,7 @@ class Minispec(object):
         self.update_calibration()
 
     def px_to_wavelength(self, idx):
-        """
-        Convert a pixel index to a wavelength
+        """Convert a pixel index to a wavelength
 
         Make sure you call minispec.getCalibration at some point before calling this
         function.
@@ -322,8 +306,7 @@ class Minispec(object):
 
     @property
     def wavelengths(self):
-        """
-        Get an array of wavelengths in nanometres
+        """Get an array of wavelengths in nanometres
 
         Useful for plotting and for storing data.
 
@@ -337,8 +320,7 @@ class Minispec(object):
         return np.array(out)
 
     def set_wifi(self, ssid, key):
-        """
-        Set the WiFi details
+        """Set the WiFi details
 
         Update the WiFI credentials on the spectrometer so it can connect to your
         local hotspot. Assumes WPA(2).
@@ -353,8 +335,7 @@ class Minispec(object):
         pass
 
     def _send_message(self, msg):
-        """
-        Send a message to the spectrometer
+        """Send a message to the spectrometer
 
         Recommended for internal use only, abstraction around comminucation with
         the spectrometer.
@@ -368,8 +349,7 @@ class Minispec(object):
         self.ssl_sock.send(msg)
 
     def _receive_message(self, magic=None, strlen=1024, timeout=5):
-        """
-        Retrieve a specific to the spectrometer
+        """Retrieve a specific to the spectrometer
 
         Recommended for internal use only, abstraction around comminucation with
         the spectrometer. Blocking. Will loop forever until the desired message
