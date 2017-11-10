@@ -189,7 +189,7 @@ class Minispec(object):
         """Get the dark spectrum
 
         Returns:
-            None
+            The current dark spectrum
         """
         return self._dark
 
