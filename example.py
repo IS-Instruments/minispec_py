@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 """
 Copyright (c) 2017 IS-Instruments Ltd
 Author: Josh Veitch-Michaelis
@@ -23,9 +24,9 @@ SOFTWARE.
 """
 
 import matplotlib.pyplot as plt
-from minispec import minispec, findDevices
+from minispec import Minispec, find_devices
 
-spectrometers = findDevices(find_first=True)
+spectrometers = find_devices(find_first=True)
 
 print("Found {} spectrometer(s).".format(len(spectrometers)))
 
@@ -34,7 +35,7 @@ if len(spectrometers) > 0:
 
     print("Connecting to {}, via {}".format(hostname, iface.decode()))
 
-    mspec = minispec(hostname)
+    mspec = Minispec(hostname)
     mspec.exposure = 10
 
     print("Exposure set to {} ms.".format(mspec.exposure))

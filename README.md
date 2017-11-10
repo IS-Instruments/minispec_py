@@ -55,7 +55,7 @@ Connected minispecs continually broadcast a message via UDP on port `12345`. Thi
 The `minispec.findDevices()` function can be used to locate any connected spectrometers on the local network. This returns a Python set containing all the spectrometers which were found before timeout (3 seconds by default). The minispec broadcast message frequency is 1Hz, so this should catch most connected devices.
 
 ```python
-spectrometers = minispec.findDevices(find_first=True)
+spectrometers = minispec.find_devices(find_first=True)
 ```
 
 The set contains tuples of the form: `((hostname, port), interface, serial)`.
@@ -73,13 +73,13 @@ Once you've found your spectrometer, you can connect to it. Here we `pop` the fi
 Then make a new `minispec` object and pass in the `hostname`:
 
 ```python
-mspec = minispec(hostname)
+mspec = Minispec(hostname)
 ```
 
 If you just want to create an object and open the connection later, you can call:
 
 ```python
-mspec = minispec()
+mspec = Minispec()
 mspec.open(hostname)
 ```
 
@@ -169,6 +169,8 @@ Simply write to the `.dark` attribute to store this new spectrum as your dark fr
 
 ```python
 mspec.dark = None
+#or
+mspec.reset_dark()
 ```
 
 ## To sum up:
