@@ -99,7 +99,7 @@ We provide this for you:
 
 If you need to update the calibration coefficients, you can do this by writing to the calibration attribute:
 
-    mspec.calibration = c1, c2, c3, c4
+    mspec.calibration = (c1, c2, c3, c4)
 
 Where `c1-c4` are the new calibration coefficients as described above. After sending the values, this function queries the spectrometer for the current (i.e. new) calibration so you can check that it was applied successfully.
 
