@@ -200,6 +200,10 @@ Since the returned spectra are numpy arrays, you have access to the various powe
 
 For further processing we direct you to the excellent and mature Scipy library which contains a huge number of signal processing functions, for example [smoothing](http://scipy-cookbook.readthedocs.io/items/SignalSmooth.html).
 
+## API Reference
+
+See `doc.md`
+
 ## License
 
 Copyright (c) 2017 IS-Instruments Ltd
