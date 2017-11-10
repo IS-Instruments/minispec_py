@@ -19,9 +19,16 @@ The interface to the spectrometer is via a web socket. This means that you can c
 
 # About this library
 
-We designed our minispec to be easy to use and we provide a free GUI application for live spectral plotting and analysis. However, we also understand that you'd probably like to integrate the spectrometer in your own system.
+We designed our minispec to be incredibly easy to use and we provide a free GUI application for live spectral plotting and analysis. However, we also understand that you'd probably like to integrate the spectrometer in your own system.
 
-This python library is designed as a basic, but functional, interface to the spectrometer. It is expected that you will write additional code to handle visualisation, saving and so on. As this functionality is provided by standard Python packages like Numpy and Matplotlib there's no need for us to reinvent the wheel! The library provides the following capabilties:
+This python library is designed as a basic, but functional, interface to the spectrometer. You can capture a spectrum in just three lines of code, including the import!
+
+    from minispec import minispec
+
+    mspec = minispec('192.168.1.10')
+    spectrum = mspec.spectrum()
+
+It is expected that you will write additional code to handle visualisation, saving and so on. As this functionality is provided by standard Python packages like Numpy and Matplotlib there's no need for us to reinvent the wheel! The library provides the following capabilties:
 
 - Locate spectrometers on the local network
 - Connect/disconnect from the spectrometer
@@ -37,33 +44,44 @@ The ability to update the WiFi settings will be added soon.
 
 An example python script is provided which will locate a spectrometer on the network, connect to it, set the exposure time, capture a spectrum and plot it.
 
-# Function reference
+# Getting Started
 
-## Locating devices
+## Discovering spectrometers
 
-The `findDevices` function can be used to locate any connected spectrometers on the local network. Connected minispecs broadcast via UDP on port `12345`. This returns a Python set containing all the spectrometers which were found before timeout (3 seconds by default). The minispec broadcast message frequency is 1Hz, so this should catch most connected devices.
+Connected minispecs continually broadcast a message via UDP on port `12345`. This lets other systems discover the IP address of any spectrometers available.
+
+The `minispec.findDevices()` function can be used to locate any connected spectrometers on the local network. This returns a Python set containing all the spectrometers which were found before timeout (3 seconds by default). The minispec broadcast message frequency is 1Hz, so this should catch most connected devices.
+
+    spectrometers = minispec.findDevices(find_first=True)
 
 The set contains tuples of the form: `((hostname, port), interface, serial)`.
 
-The serial number is a 64-bit integer unique to each PCB in the spectrometer.
+`hostname` is the IP address of the spectrometer. `interface` tells you if your spectrometer is using WiFi (`wlan0`) or ethernet (`eth0`). The `port` defaults to `8000`. The `serial` number is a 64-bit integer unique to each PCB in the spectrometer.
 
 ## Connecting
 
-Once you've found your spectrometer, you can connect to it:
+Once you've found your spectrometer, you can connect to it. Here we `pop` the first spectrometer on the list:
 
-    address, iface, serial = spectrometers.pop()
-    
+    (hostname, port), iface, serial = spectrometers.pop()
+
+Then make a new `minispec` object and pass in the `hostname`:
+
+    mspec = minispec(hostname)
+
+If you just want to create an object and open the connection later, you can call:
+
     mspec = minispec()
-    mspec.open(address[0])
+    mspec.open(hostname)
 
-Here we `pop` the first spectrometer on the list.
+Note you don't need to supply the ports here, it will be set by default to 8000. If you've changed this, then you can use:
+
+    mspec = minispec(hostname, port)
 
 ## Get the calibration coefficients
 
-To do anything useful with our spectra, we need to know what wavelengths we're measuring. This is unique to each spectrometer which is calibrated on leaving our workshop.
+To do anything useful with our spectra, we need to know what wavelengths we're measuring. This is unique to each spectrometer which is calibrated on leaving our workshop. The calibration coefficients are implicitly requested when you call `open()`.
 
-    cal = mspec.getCalibration()
-    print(cal)
+    print(mspec.calibration)
     
 This should output something like:
 
@@ -73,15 +91,15 @@ This represents a 3rd order polynomial to convert pixel number to nanometers. Th
 
     wavelength[i] = cal[4] + cal[3]*i**1 + cal[2]*i**2 + cal[1]*i**3
 
-We provide this as a function for you:
+We provide this for you:
 
-    wavelengths = mspec.getWavelengths()
+    print(mspec.wavelengths)
 
-Which returns a numpy array containing the wavelength conversion for each pixel on the detector.
+`mspec.wavelengths` returns a numpy array containing the wavelength conversion for each pixel on the detector.
 
-If you need to update the calibration coefficients, you can do this by using the `setCalibration()` function which is used as follows:
+If you need to update the calibration coefficients, you can do this by writing to the calibration attribute:
 
-    new_cal = mspec.setCalibration(c1, c2, c3, c4)
+    mspec.calibration = c1, c2, c3, c4
 
 Where `c1-c4` are the new calibration coefficients as described above. After sending the values, this function queries the spectrometer for the current (i.e. new) calibration so you can check that it was applied successfully.
 
@@ -91,17 +109,20 @@ Finally, we get to the good stuff!
 
 Simply call:
 
-    spectrum = mspec.getSpectrum()
+    spectrum = mspec.spectrum()
 
 To acquire and retrieve a spectrum. The default exposure time is 2 ms, but it may be different if you're in read-only mode and someone else has modified it. You can check with:
 
-    print("Exposure set to {} ms.".format(mspec.getExposure()))
+    print("Exposure set to {} ms.".format(mspec.exposure))
 
 If you find that you need a longer exposure time, then you can call:
 
-    new_exposure = mspec.setExposure(10)
+    mspec.exposure = 10
 
-The provided value (in this case 10) is in ms. Just like with `setCalibration`, this function will query the spectrometer to see what value it actually set (useful for troubleshooting).
+The provided value (in this case 10) is in ms. Just like when you update the calibration, updating the exposure will trigger a request to read back what value was acutally set, so you can check with e.g.:
+
+    mspec.exposure = 100
+    assert(mspec.exposure == 100)
 
 ## Dark subtraction
 
@@ -109,46 +130,14 @@ It's often useful to subtract dark counts from the spectrometer, which will chan
 
 First make sure your exposure time is correct, as the dark spectrum is only valid for that exposure setting. Then, capture a spectrum with your equipment set up in a 'dark' mode (e.g. cover the fibre end).
 
-    dark_spectrum = mspec.getSpectrum()
-    mspec.setDark(dark_spectrum)
+    dark_spectrum = mspec.spectrum()
+    mspec.dark = dark_spectrum
 
-Then call `setDark` to store this new spectrum as your dark frame. It will be automatically subtracted from new data (for convenience) until you call `clearDark`.
+Simply write to the `.dark` attribute to store this new spectrum as your dark frame. It will be automatically subtracted from new data (for convenience). If you decide you
 
 ## To sum up:
 
-Here's a brief code example that finds a spectrometer, connects to it and plots the spectrum.
-
-    import matplotlib.pyplot as plt
-    from minispec import minispec, findDevices
-
-    mspec = minispec()
-
-    spectrometers = findDevices(find_first=True)
-
-    print("Found {} spectrometer(s).".format(len(spectrometers)))
-
-    if len(spectrometers) > 0:
-        address, iface, serial = spectrometers.pop()
-
-        print("Connecting to {}, via {}".format(address, iface.decode()))
-
-        mspec.open(address[0])
-        mspec.getCalibration()
-
-        print("Exposure set to {} ms.".format(mspec.setExposure(10)))
-
-        wavelengths = mspec.getWavelengths()
-        spectrum = mspec.getSpectrum()
-
-        print("Got spectrum")
-
-        plt.plot(wavelengths, spectrum)
-        plt.title('Spectrum')
-        plt.xlabel('Wavelength (nm)')
-        plt.ylabel('Counts')
-        plt.show()
-
-        mspec.release()
+The `example.py` script in this repository wraps all of these things together and adds some plotting code so you can see what your spectrometer captured.
 
 ## What next?
 

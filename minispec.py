@@ -44,35 +44,37 @@ def findDevices(find_first=False, sock_timeout=1, search_timeout=3):
         spectrometer is set up. Serial is a 64-bit identifier unique to 
         each spectrometer.
     """
-        multicast_port  = 12345
-        multicast_group = "0.0.0.0"
+    multicast_port = 12345
+    multicast_group = "0.0.0.0"
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM )
-        sock.bind(("", multicast_port ))
-        sock.settimeout(1.5)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM )
+    sock.bind(("", multicast_port ))
+    sock.settimeout(1.5)
 
-        t = time.time()
+    t = time.time()
 
-        spectrometers = set()
+    spectrometers = set()
 
-        while (time.time() - t) < search_timeout:
-            data, address = sock.recvfrom(33)
+    while (time.time() - t) < search_timeout:
+        data, address = sock.recvfrom(33)
 
-            if data.find(b'msp1000') == 0:
-                iface, serial = data.split(b',')[:2]
-                spectrometers.add((address, iface[7:], serial))
+        if data.find(b'msp1000') == 0:
+            iface, serial = data.split(b',')[:2]
+            spectrometers.add((address, iface[7:], serial))
 
-                if find_first == True:
-                    break
-        
-        sock.close()
-        
-        return spectrometers
-
-class minispec:
+            if find_first == True:
+                break
     
-    def __init__(self, hostname = None, port = None):
-        self.dark = None
+    sock.close()
+    
+    return spectrometers
+
+class minispec(object):
+    
+    def __init__(self, hostname = None, port = 8000):
+        self._dark = np.zeros(3648)
+        if hostname is not None:
+            self.open(hostname, port)
 
     def open(self, hostname, port=8000):
         """
@@ -91,6 +93,9 @@ class minispec:
         try:
             self.ssl_sock = ssl.wrap_socket(sock)
             self.ssl_sock.connect((hostname, port))
+
+            self.updateCalibration()
+
         except socket.error as msg:
             print("Error: {}.".format(msg))
             sock.close()
@@ -101,20 +106,8 @@ class minispec:
         """
         self.ssl_sock.close()
     
-    def setExposure(self, exposure=2):
-        """
-        Set the exposure time of the spectromter
-
-        Args:
-            exposure (int): Desired exposure time in ms
-
-        Returns:
-            The new exposure time reported by the spectrometer.
-        """
-        self._sendMessage('set_exposure{}\r\n'.format(exposure).encode())
-        return self.getExposure()
-
-    def getExposure(self):
+    @property
+    def exposure(self):
         """
         Get the exposure time of the spectromter
 
@@ -125,7 +118,21 @@ class minispec:
         msg = self._receiveMessage(b'exposure:')
         return int(msg[9:])
 
-    def getRawSpectrum(self):
+    @exposure.setter
+    def exposure(self, exposure=2):
+        """
+        Set the exposure time of the spectromter
+
+        Args:
+            exposure (int): Desired exposure time in ms
+
+        Returns:
+            The new exposure time reported by the spectrometer.
+        """
+        self._sendMessage('set_exposure{}\r\n'.format(exposure).encode())
+        return
+
+    def rawSpectrum(self):
         """
         Acquire a raw spectrum
 
@@ -145,7 +152,7 @@ class minispec:
         
         return np.frombuffer(bytes(buffer[9:]), dtype='uint16', count=3694)
 
-    def getSpectrum(self):
+    def spectrum(self):
         """
         Acquire a spectrum
 
@@ -156,19 +163,27 @@ class minispec:
         Returns:
             A numpy array of 3648 float32 values representing the acquired spectrum.
         """
-        spectrum_raw = self.getRawSpectrum()
+        spectrum_raw = self.rawSpectrum()
         spectrum = spectrum_raw[32:3680].astype('float32')
 
         ccd_offset = spectrum_raw[17:30]
 
         spectrum -= ccd_offset.mean()
 
-        if self.dark is not None:
-            spectrum -= self.dark
+        if self._dark is not None:
+            spectrum -= self._dark
 
         return spectrum
 
-    def setDark(self, spectrum):
+    @property
+    def dark(self):
+        """
+        Get the dark spectrum
+        """
+        return self._dark
+
+    @dark.setter
+    def dark(self, spectrum):
         """
         Set the dark spectrum
 
@@ -176,15 +191,52 @@ class minispec:
         from new spectra, to disable, call minispec.clearDark.
         """
         if(len(spectrum) == 3648):
-            self.dark = spectrum
-  
-    def clearDark(self):
-        """
-        Disable dark subtraction
-        """
-        self.dark = None
+            self._dark = spectrum
 
-    def setCalibration(self, c1, c2, c3, c4):
+    def resetDark(self):
+        """
+        Reset the dark spectrum (to nothing)
+        """
+        self._dark = None
+
+    def updateCalibration(self):
+        """
+        Update wavelength calibration coeffients.
+
+        Get the new calibration coefficients from the spectrometer.
+
+        """
+        self._sendMessage(b'get_calibration\r\n')
+        msg = self._receiveMessage(b'calibration:').decode()[12:].split(',')
+        
+        self._calibration = np.array(msg, dtype='float32')[:4]
+
+
+    @property
+    def calibration(self):
+        """
+        Get wavelength calibration coeffients.
+
+        The spectrum is corrected using a 3rd degree polynomial.
+
+        c1 = x**3 coefficient
+        c2 = x**2 coefficient
+        c3 = x**1 coefficient
+        c4 = x**0 coefficient
+
+        That is, c4 contains the starting wavelength and the wavelengths are calculated as:
+
+        x[i] = c4 + c3*i**1 + c2*i**2 + c1*i**3
+
+        The units of x are nanometers.
+
+        Returns:
+            A numpy array containing the new calibration coeffients reported by the spectrometer.
+        """
+        return self._calibration
+
+    @calibration.setter
+    def calibration(self, coefficients):
         """
         Set wavelength calibration coeffients.
 
@@ -205,6 +257,9 @@ class minispec:
         Returns:
             A numpy array containing the new calibration coeffients reported by the spectrometer.
         """
+
+        c1, c2, c3, c4 = coefficients
+
         float(c1)
         float(c2)
         float(c3)
@@ -212,34 +267,7 @@ class minispec:
 
         msg = 'set_cal{},{},{},{}\r\n'.format(c1, c2, c3, c4)
         self._sendMessage(msg.encode())
-        return self.getCalibration()
-
-    def getCalibration(self):
-        """
-        Get wavelength calibration coeffients.
-
-        The spectrum is corrected using a 3rd degree polynomial.
-
-        c1 = x**3 coefficient
-        c2 = x**2 coefficient
-        c3 = x**1 coefficient
-        c4 = x**0 coefficient
-
-        That is, c4 contains the starting wavelength and the wavelengths are calculated as:
-
-        x[i] = c4 + c3*i**1 + c2*i**2 + c1*i**3
-
-        The units of x are nanometers.
-
-        Returns:
-            A numpy array containing the new calibration coeffients reported by the spectrometer.
-        """
-        self._sendMessage(b'get_calibration\r\n')
-        msg = self._receiveMessage(b'calibration:').decode()[12:].split(',')
-        
-        self.cal = np.array(msg, dtype='float32')[:4]
-
-        return self.cal
+        self.updateCalibration()
 
     def pxToWavelength(self, px):
         """
@@ -256,11 +284,12 @@ class minispec:
 
         """
         out = 0
-        for i, c in enumerate(self.cal[::-1]):
+        for i, c in enumerate(self._calibration[::-1]):
             out += c * (px**i)
         return out
 
-    def getWavelengths(self):
+    @property
+    def wavelengths(self):
         """
         Get an array of wavelengths in nanometres
 

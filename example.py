@@ -25,28 +25,23 @@ SOFTWARE.
 import matplotlib.pyplot as plt
 from minispec import minispec, findDevices
 
-mspec = minispec()
-
 spectrometers = findDevices(find_first=True)
 
 print("Found {} spectrometer(s).".format(len(spectrometers)))
 
 if len(spectrometers) > 0:
-    address, iface, serial = spectrometers.pop()
+    (hostname, port), iface, serial = spectrometers.pop()
 
-    print("Connecting to {}, via {}".format(address, iface.decode()))
+    print("Connecting to {}, via {}".format(hostname, iface.decode()))
 
-    mspec.open(address[0])
-    mspec.getCalibration()
+    mspec = minispec(hostname)
+    mspec.exposure = 10
 
-    print("Exposure set to {} ms.".format(mspec.setExposure(10)))
+    print("Exposure set to {} ms.".format(mspec.exposure))
 
-    wavelengths = mspec.getWavelengths()
-    spectrum = mspec.getSpectrum()
+    print("Current calibration {}".format(mspec.calibration))
 
-    print("Got spectrum")
-
-    plt.plot(wavelengths, spectrum)
+    plt.plot(mspec.wavelengths, mspec.spectrum())
     plt.title('Spectrum')
     plt.xlabel('Wavelength (nm)')
     plt.ylabel('Counts')
