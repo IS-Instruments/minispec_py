@@ -1,9 +1,14 @@
-# minispec_py
+# MSP1000 Python Interface
 This repository provides an example python interface to the IS Instruments MSP1000 miniature spectrometer - we call it the minispec for short. There are minimal dependencies - spectra are returned as Numpy arrays and the connection to the spectrometer is made via SSL. This code was written to target Python 3, but should work on Python 2.7 as well.
 
 A standalone C++ interface will be released in the near future.
 
+For the full (auto-generated) API reference, see `doc.md`.
+
 # About the spectrometer
+
+![MSP1000](https://www.azom.com/images/Article_Images/ImageForArticle_14009(1).jpg)
+
 The MSP1000 is a scientific-grade VIS/NIR spectrometer with a typical spectral range of 400-850nm and a (fibre-dependent) resolution of less than 1 nm. The spectrometer connects via your local network by one of four methods:
 
 - A direct ethernet connection to your computer
