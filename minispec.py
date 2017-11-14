@@ -87,6 +87,12 @@ class Minispec(object):
         if hostname is not None:
             self.open(hostname, port)
 
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        self.release()
+
     def open(self, hostname, port=8000):
         """Opens a connection to a spectrometer
 

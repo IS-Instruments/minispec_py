@@ -35,17 +35,18 @@ if len(spectrometers) > 0:
 
     print("Connecting to {}, via {}".format(hostname, iface.decode()))
 
-    mspec = Minispec(hostname)
-    mspec.exposure = 10
+    with Minispec(hostname) as mspec:
+        
+        mspec.exposure = 10
+        print("Exposure set to {} ms.".format(mspec.exposure))
 
-    print("Exposure set to {} ms.".format(mspec.exposure))
+        print("Current calibration {}".format(mspec.calibration))
 
-    print("Current calibration {}".format(mspec.calibration))
-
-    plt.plot(mspec.wavelengths, mspec.spectrum())
+        wavelengths, spectrum = mspec.wavelengths, mspec.spectrum()
+    
+    plt.plot(wavelengths, spectrum)
     plt.title('Spectrum')
     plt.xlabel('Wavelength (nm)')
     plt.ylabel('Counts')
     plt.show()
-
-    mspec.release()
+    
