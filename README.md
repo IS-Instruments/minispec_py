@@ -29,9 +29,9 @@ We designed our minispec to be incredibly easy to use and we provide a free GUI 
 This python library is designed as a basic, but functional, interface to the spectrometer. You can capture a spectrum in just three lines of code, including the import!
 
 ```python
-from minispec import minispec
+from minispec import Minispec
 
-mspec = minispec('192.168.1.10')
+mspec = Minispec('192.168.1.10')
 spectrum = mspec.spectrum()
 ```
 
