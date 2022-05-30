@@ -3,6 +3,7 @@
 """
 Copyright (c) 2017 IS-Instruments Ltd
 Author: Josh Veitch-Michaelis
+Maintainer: Charlie Warren (cwarren-isinstruments)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,17 +37,16 @@ if len(spectrometers) > 0:
     print("Connecting to {}, via {}".format(hostname, iface.decode()))
 
     with Minispec(hostname) as mspec:
-        
+
         mspec.exposure = 10
         print("Exposure set to {} ms.".format(mspec.exposure))
 
         print("Current calibration {}".format(mspec.calibration))
 
         wavelengths, spectrum = mspec.wavelengths, mspec.spectrum()
-    
+
     plt.plot(wavelengths, spectrum)
     plt.title('Spectrum')
     plt.xlabel('Wavelength (nm)')
     plt.ylabel('Counts')
     plt.show()
-    

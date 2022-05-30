@@ -1,6 +1,7 @@
 """
 Copyright (c) 2017 IS-Instruments Ltd
 Author: Josh Veitch-Michaelis
+Maintainer: Charlie Warren (cwarren-isinstruments)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +26,7 @@ import socket
 import time
 import ssl
 import numpy as np
+
 
 def find_devices(find_first=False, sock_timeout=3, search_timeout=3):
     """Finds spectrometers broadcasting on the local network
@@ -67,6 +69,7 @@ def find_devices(find_first=False, sock_timeout=3, search_timeout=3):
 
     return spectrometers
 
+
 class Minispec(object):
     """Interface class for the IS-Instruments MSP1000 miniature spectrometer
     """
@@ -89,7 +92,7 @@ class Minispec(object):
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, type, value, traceback):
         self.release()
 
@@ -171,12 +174,13 @@ class Minispec(object):
     def spectrum(self):
         """Acquire a spectrum
 
-        Performs an exposure and retrieves the spectrum. The voltage offset from the
-        CCD is automatically subtracted. If a dark spectrum has been set, this will
-        also be subtracted.
+        Performs an exposure and retrieves the spectrum. The voltage offset
+        from the CCD is automatically subtracted. If a dark spectrum has been
+        set, this will also be subtracted.
 
         Returns:
-            spectrum: numpy array of 3648 float32 values representing the acquired spectrum.
+            spectrum: numpy array of 3648 float32 values
+            representing the acquired spectrum.
         """
         spectrum_raw = self.raw_spectrum()
         spectrum = spectrum_raw[32:3680].astype('float32')
@@ -203,8 +207,8 @@ class Minispec(object):
     def dark(self, spectrum):
         """Set the dark spectrum.
 
-        This should be a 1x3648 float32 numpy array. It will be automatically subtracted
-        from new spectra, to disable, call minispec.reset_dark.
+        This should be a 1x3648 float32 numpy array. It will be automatically
+        subtracted from new spectra, to disable, call minispec.reset_dark.
 
         Args:
             spectrum: a dark spectrum.
@@ -236,7 +240,6 @@ class Minispec(object):
 
         self._calibration = np.array(msg, dtype='float32')[:4]
 
-
     @property
     def calibration(self):
         """Get wavelength calibration coeffients.
@@ -248,14 +251,16 @@ class Minispec(object):
         c3 = x**1 coefficient
         c4 = x**0 coefficient
 
-        That is, c4 contains the starting wavelength and the wavelengths are calculated as:
+        That is, c4 contains the starting wavelength and the
+        wavelengths are calculated as:
 
         x[i] = c4 + c3*i**1 + c2*i**2 + c1*i**3
 
         The units of x are nanometers.
 
         Returns:
-            A numpy array containing the new calibration coeffients reported by the spectrometer.
+            A numpy array containing the new calibration coeffients reported
+            by the spectrometer.
         """
         return self._calibration
 
@@ -270,7 +275,8 @@ class Minispec(object):
         c3 = x**1 coefficient
         c4 = x**0 coefficient
 
-        That is, c4 contains the starting wavelength and the wavelengths are calculated as:
+        That is, c4 contains the starting wavelength and the
+        wavelengths are calculated as:
 
         x[i] = c4 + c3*i**1 + c2*i**2 + c1*i**3
 
@@ -278,7 +284,8 @@ class Minispec(object):
             c1,c2,c3,c4 (float): New calibration coefficients.
 
         Returns:
-            A numpy array containing the new calibration coeffients reported by the spectrometer.
+            A numpy array containing the new calibration coeffients reported
+            by the spectrometer.
         """
 
         cal_1, cal_2, cal_3, cal_4 = coefficients
@@ -295,8 +302,8 @@ class Minispec(object):
     def px_to_wavelength(self, idx):
         """Convert a pixel index to a wavelength
 
-        Make sure you call minispec.getCalibration at some point before calling this
-        function.
+        Make sure you call minispec.getCalibration at some point before
+        calling this function.
 
         Args:
             iox (int): The index of a pixel on the CCD.
@@ -321,15 +328,16 @@ class Minispec(object):
             detector (3648 values).
 
         """
-        out = [self.px_to_wavelength(x) for x in np.arange(3648, dtype='float32')]
+        out = [
+            self.px_to_wavelength(x) for x in np.arange(3648, dtype='float32')]
 
         return np.array(out)
 
     def set_wifi(self, ssid, key):
         """Set the WiFi details
 
-        Update the WiFI credentials on the spectrometer so it can connect to your
-        local hotspot. Assumes WPA(2).
+        Update the WiFI credentials on the spectrometer so it can connect
+        to your local hotspot. Assumes WPA(2).
 
         Args:
             ssid: The hotspot SSID.
@@ -343,8 +351,8 @@ class Minispec(object):
     def _send_message(self, msg):
         """Send a message to the spectrometer
 
-        Recommended for internal use only, abstraction around comminucation with
-        the spectrometer.
+        Recommended for internal use only, abstraction around comminucation
+        with the spectrometer.
 
         Args:
             msg: The message (byte) string to send.
@@ -357,16 +365,16 @@ class Minispec(object):
     def _receive_message(self, magic=None, strlen=1024, timeout=5):
         """Retrieve a specific to the spectrometer
 
-        Recommended for internal use only, abstraction around comminucation with
-        the spectrometer. Blocking. Will loop forever until the desired message
-        is received, or until timeout.
+        Recommended for internal use only, abstraction around comminucation
+        with the spectrometer. Blocking. Will loop forever until the desired
+        message is received, or until timeout.
 
         Iterates through returned messages from the spectrometer (delimited by
         newline) and looks for the provided magic string.
 
         Args:
-            magic: Used to identify the returned commands. If None then the first
-                   message back will be returned.
+            magic: Used to identify the returned commands. If None then the
+            first message back will be returned.
             strlen: How many characters to receive.
             timeout: Timeout length in seconds.
 
