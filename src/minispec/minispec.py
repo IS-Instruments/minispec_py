@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import sys
 import socket
 import time
 import ssl
@@ -107,7 +108,10 @@ class Minispec(object):
         sock.settimeout(2)
 
         try:
-            self.ssl_sock = ssl.wrap_socket(sock)
+            if sys.version_info >= (3, 12):
+                self.ssl_sock = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2).wrap_socket(sock)
+            else:
+                self.ssl_sock = ssl.wrap_socket(sock)
             self.ssl_sock.connect((hostname, port))
 
             self.update_calibration()
