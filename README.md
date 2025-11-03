@@ -178,7 +178,7 @@ mspec.reset_dark()
 
 ## To sum up:
 
-The `example.py` script in this repository wraps all of these things together and adds some plotting code so you can see what your spectrometer captured.
+The `example.py` script in this repository wraps all of these things together and adds some plotting code so you can see what your spectrometer captured. Note that this script also requires matplotlib, which can be installed separately, or if installing the minispec package via the wheel you can add the `[plot]` optional argument to automatically add matplotlib.
 
 ## What next?
 
